@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
 	kstat_close(kc);
 
 	if (pp_kernel < pageslocked) {
-		kernel = pp_kernel;
+		kernel = pp_kernel - arcsize;
 		locked = pageslocked - pp_kernel;
 	} else {
 		kernel = pageslocked;
