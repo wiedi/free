@@ -12,6 +12,6 @@ Example
 <pre>
 # free
            total       used       free     locked     kernel     cached
-Mem:       36.0G      5.20G      1.53G      3.10G      26.2G      21.9G
+Mem:       36.0G      5.47G      1.14G      3.10G      4.56G      21.7G
 Swap:      30.5G      19.0G      11.5G
 </pre>
