@@ -18,6 +18,7 @@
 #include <sys/sysinfo.h>
 #include <kstat.h>
 #include <sys/swap.h>
+#include <zone.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <libgen.h>
@@ -75,9 +76,8 @@ usage(void)
 
 int main(int argc, char *argv[]) {
 	int c;
-	unsigned long long pages, total, freemem, avail, kernel,
-	    pageslocked, arcsize, pp_kernel;
-	unsigned long long locked, used;
+	unsigned long long pages, total, used, freemem, avail, kernel;
+	unsigned long long locked, pageslocked, arcsize, pp_kernel;
 	unsigned long long swaptotal, swapused, swapfree;
 	char ram_total[6], ram_used[6], ram_free[6], ram_locked[6], ram_kernel[6];
 	char ram_cached[6], swap_total[6], swap_used[6], swap_free[6];
@@ -117,21 +117,7 @@ int main(int argc, char *argv[]) {
 	kstat_t *ks = kstat_lookup(kc, "unix", 0, "system_pages");
 	kstat_read(kc, ks, 0);
 
-	kstat_named_t *knp = kstat_data_lookup(ks, "freemem");
-	if (knp == NULL) {
-		(void) kstat_close(kc);
-		return (-1);
-	}
-	freemem = (unsigned long long)knp->value.ui64 * pagesize;
-
-	knp = kstat_data_lookup(ks, "availrmem");
-	if (knp == NULL) {
-		(void) kstat_close(kc);
-		return (-1);
-	}
-	avail = (unsigned long long)knp->value.ui64 * pagesize;
-
-	knp = kstat_data_lookup(ks, "pp_kernel");
+	kstat_named_t *knp = kstat_data_lookup(ks, "pp_kernel");
 	if (knp == NULL) {
 		(void) kstat_close(kc);
 		return (-1);
@@ -144,6 +130,36 @@ int main(int argc, char *argv[]) {
 		return (-1);
 	}
 	pageslocked = (unsigned long long)knp->value.ui64 * pagesize;
+
+	zoneid_t zid = getzoneid();
+	if (zid > 0) {
+		/* local zone */
+		ks = kstat_lookup(kc, "memory_cap", zid, NULL);
+		kstat_read(kc, ks, 0);
+
+		knp = kstat_data_lookup(ks, "rss");
+		if (knp == NULL) {
+			(void) kstat_close(kc);
+			return (-1);
+		}
+		used = (unsigned long long)knp->value.ui64;
+		freemem = total - used;
+	} else {
+		knp = kstat_data_lookup(ks, "freemem");
+		if (knp == NULL) {
+			(void) kstat_close(kc);
+			return (-1);
+		}
+		freemem = (unsigned long long)knp->value.ui64 * pagesize;
+
+		knp = kstat_data_lookup(ks, "availrmem");
+		if (knp == NULL) {
+			(void) kstat_close(kc);
+			return (-1);
+		}
+		avail = (unsigned long long)knp->value.ui64 * pagesize;
+		used = avail - freemem;
+	}
 
 	ks = kstat_lookup(kc, "zfs", 0, "arcstats");
 	kstat_read(kc, ks, 0);
@@ -164,8 +180,6 @@ int main(int argc, char *argv[]) {
 		kernel = pageslocked;
 		locked = 0;
 	}
-
-	used = avail - freemem;
 
 	swapctl(SC_AINFO, &ai);
 	swaptotal = ai.ani_max * pagesize;
