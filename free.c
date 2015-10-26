@@ -183,8 +183,8 @@ int main(int argc, char *argv[]) {
 
 	swapctl(SC_AINFO, &ai);
 	swaptotal = ai.ani_max * pagesize;
-	swapused  = (ai.ani_max - ai.ani_free + ai.ani_resv) * pagesize;
-	swapfree  = (ai.ani_free - ai.ani_resv) * pagesize;
+	swapused  = ai.ani_resv * pagesize;
+	swapfree  = (ai.ani_max - ai.ani_resv) * pagesize;
 
 	if (parsable) {
 		printf("type;total;used;free;locked;kernel;cached\n");
