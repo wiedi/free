@@ -181,7 +181,10 @@ int main(int argc, char *argv[]) {
 		locked = 0;
 	}
 
-	swapctl(SC_AINFO, &ai);
+	if(swapctl(SC_AINFO, &ai) == -1) {
+		perror(progname);
+		return (-1);
+	}
 	swaptotal = ai.ani_max * pagesize;
 	swapused  = ai.ani_resv * pagesize;
 	swapfree  = (ai.ani_max - ai.ani_resv) * pagesize;
