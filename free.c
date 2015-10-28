@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
 		kernel = pp_kernel - arcsize;
 		locked = pageslocked - pp_kernel;
 	} else {
-		kernel = pageslocked;
+		kernel = pageslocked - arcsize;
 		locked = 0;
 	}
 
