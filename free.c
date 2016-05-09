@@ -135,6 +135,11 @@ int main(int argc, char *argv[]) {
 	if (zid > 0) {
 		/* local zone */
 		ks = kstat_lookup(kc, "memory_cap", zid, NULL);
+		if (ks == NULL) {
+			fprintf(stderr, "memory_cap not implemeted\n");
+			(void) kstat_close(kc);
+			return (-1);
+		}
 		kstat_read(kc, ks, 0);
 
 		knp = kstat_data_lookup(ks, "rss");
