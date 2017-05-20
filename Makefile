@@ -15,14 +15,19 @@
 
 CC = gcc
 
-CFLAGS  = -g -O2 -Wall 
-LIBS = -lkstat 
-TARGET = free
+CFLAGS= -g -O2 -Wall
+LIBS= -lkstat
+TARGET= free
+OBJS= nicenum.o
+SRCS= $(OBJS:.o=.c)
 
 all: $(TARGET)
 
-$(TARGET): $(TARGET).c
-	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).c $(LIBS)
+$(TARGET): $(OBJS) $(TARGET).c
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET) $(TARGET).c $(LIBS)
+
+$(OBJS): $(SRCS)
+	$(COMPILE.c) $(SRCS)
 
 clean:
-	$(RM) $(TARGET)
+	$(RM) $(TARGET) $(OBJS)
